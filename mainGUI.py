@@ -3,27 +3,39 @@ from tkinter import *
 root = Tk()
 startHour = 8
 endHour = 21
-
+myButtons = []
 
 class ScheduleDialog:
     """The dialog window to add an event in a time block"""
 
     def __init__(self, parent, button):
 
+        choices = ["15 min", "30 min", "45 min", "1 hour"]
+        self.choiceValues = {"15 min": 1, "30 min": 2, "45 min": 3, "1 hour": 4}
+        self.timeChoice = StringVar(root)
+        self.timeChoice.set("15 min")
+
         self.button = button
+        self.positionInfo = self.button.grid_info()
+        self.row = self.positionInfo["row"]
 
         top = self.top = Toplevel(parent)
 
-        Label(top, text="Add Event").pack()
+        Label(top, text="Event Name").pack()
+        self.eventName = Entry(top)
+        self.eventName.pack(padx=5)
 
-        self.e = Entry(top)
-        self.e.pack(padx=5)
+        Label(top, text="How long is the event").pack()
+        self.howLongMenu = OptionMenu(top, self.timeChoice, *choices)
+        self.howLongMenu.pack(padx=5)
 
         b = Button(top, text="OK", command=self.submit)
         b.pack(pady=5)
 
     def submit(self):
-        self.button["text"] = self.e.get()
+        numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
+        for x in range(int(self.row), int(self.row) + numberToChange):
+            myButtons[x]["text"] = self.eventName.get()
         self.top.destroy()
 
 
@@ -36,7 +48,6 @@ def dialogMain(button):
 
 def addTimes(startH, endH, frame):
     """ Adds all 15 minute intervals between start and end time to frame"""
-    myButtons = []
     times = []
 
     while startH < endH:
