@@ -48,7 +48,7 @@ def addTimes(startH, endH, frame):
 
     for x in range(len(times)):
         Label(frame, text=times[x]).grid(row=x, column=0)
-        z = Button(frame, text="Nothing Scheduled", command=lambda: dialogMain(myButtons[2]))
+        z = Button(frame, text="Nothing Scheduled", command=lambda i=x: dialogMain(myButtons[i]))
         z.grid(row=x, column=1)
         myButtons.append(z)
 
