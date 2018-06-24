@@ -48,7 +48,7 @@ def addTimes(startH, endH, frame):
 
     for x in range(len(times)):
         Label(frame, text=times[x]).grid(row=x, column=0)
-        z = Button(frame, text="Nothing Scheduled", command=lambda i=x: dialogMain(myButtons[i]))
+        z = Button(frame, text="Nothing Scheduled", command=lambda i=x: dialogMain(myButtons[i]), width=15)
         z.grid(row=x, column=1)
         myButtons.append(z)
 
@@ -63,6 +63,7 @@ def main():
     sizey = 356
     root.wm_geometry("%dx%d+0+0" % (sizex, sizey))
     root.title("Time Blocker")
+    root.resizable(width=False, height=False)
 
     myframe = Frame(root, relief=GROOVE, width=50, height=100, bd=1)
     myframe.place(x=0, y=0)
