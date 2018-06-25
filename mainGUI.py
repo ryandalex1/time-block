@@ -1,4 +1,5 @@
 from tkinter import *
+from random import *
 
 root = Tk()
 startHour = 8
@@ -10,10 +11,13 @@ class ScheduleDialog:
 
     def __init__(self, parent, button):
 
-        choices = ["15 min", "30 min", "45 min", "1 hour"]
-        self.choiceValues = {"15 min": 1, "30 min": 2, "45 min": 3, "1 hour": 4}
+        choices = ["15 min", "30 min", "45 min", "1 hour", "2 hours", "3 hours"]
+        self.choiceValues = {"15 min": 1, "30 min": 2, "45 min": 3, "1 hour": 4, "2 hours": 8, "3 hours": 12}
         self.timeChoice = StringVar(root)
-        self.timeChoice.set("15 min")
+
+        self.colorChoices = ["royal blue", "medium sea green", "yellow", "salmon", "coral", "indian red",
+                             "medium orchid", "DarkOliveGreen1", "turquoise1", "khaki", "aquamarine"]
+        shuffle(self.colorChoices)
 
         self.button = button
         self.positionInfo = self.button.grid_info()
@@ -21,29 +25,59 @@ class ScheduleDialog:
 
         top = self.top = Toplevel(parent)
 
-        Label(top, text="Event Name").pack()
-        self.eventName = Entry(top)
-        self.eventName.pack(padx=5)
+        if self.button["text"] == "Nothing Scheduled":
+            Label(top, text="Event Name").pack()
+            self.eventName = Entry(top)
+            self.eventName.pack(padx=5)
+            self.timeChoice.set("15 min")
+            b = Button(top, text="OK", command=self.submit)
+
+        else:
+            Label(top, text="Edit Event").pack()
+            self.eventName = Entry(top)
+            self.eventName.pack(padx=5)
+            self.eventName.insert(END, self.button["text"])
+
+            i = 0
+            for x in myButtons:
+                if x["text"] == self.button["text"]:
+                    i += 1
+            for key, value in self.choiceValues.items():
+                if value == i:
+                    self.timeChoice.set(key)
+
+            b = Button(top, text="OK", command=self.edit)
 
         Label(top, text="How long is the event").pack()
         self.howLongMenu = OptionMenu(top, self.timeChoice, *choices)
         self.howLongMenu.pack(padx=5)
 
-        b = Button(top, text="OK", command=self.submit)
         b.pack(pady=5)
+
+    def edit(self):
+        a = None
+        for x in myButtons:
+            if x["text"] == self.button["text"]:
+                a = x.grid_info()
+                break
+
+        numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
+        for x in range(int(a["row"]), int(a["row"]) + numberToChange):
+            myButtons[x]["text"] = self.eventName.get()
+        self.top.destroy()
 
     def submit(self):
         numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
         for x in range(int(self.row), int(self.row) + numberToChange):
             myButtons[x]["text"] = self.eventName.get()
+            # myButtons[x].configure(background="aquamarine")     # self.colorChoices[8]
         self.top.destroy()
 
 
 def dialogMain(button):
     """Adds an event to a the time block"""
-    if button.cget("text") == "Nothing Scheduled":
-        d = ScheduleDialog(root, button)
-        root.wait_window(d.top)
+    d = ScheduleDialog(root, button)
+    root.wait_window(d.top)
 
 
 def addTimes(startH, endH, frame):
