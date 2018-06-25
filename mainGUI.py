@@ -74,7 +74,7 @@ class ScheduleDialog:
         numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
         for x in range(int(self.row), int(self.row) + numberToChange):
             myButtons[x]["text"] = self.eventName.get()
-            # myButtons[x].configure(background="aquamarine")     # self.colorChoices[8]
+            myButtons[x].configure(background=self.colorChoices[8])     # Only works on Windows
         self.top.destroy()
 
 
