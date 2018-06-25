@@ -33,7 +33,7 @@ class ScheduleDialog:
             b = Button(top, text="OK", command=self.submit)
 
         else:
-            Label(top, text="Edit Event").pack()
+            Label(top, text="Add Event").pack()
             self.eventName = Entry(top)
             self.eventName.pack(padx=5)
             self.eventName.insert(END, self.button["text"])
@@ -64,6 +64,10 @@ class ScheduleDialog:
         numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
         for x in range(int(a["row"]), int(a["row"]) + numberToChange):
             myButtons[x]["text"] = self.eventName.get()
+        indexes = [i for i, x in enumerate(myButtons) if x["text"] == self.eventName.get()]
+        for x in indexes:
+            if x not in range(int(a["row"]), int(a["row"]) + numberToChange):
+                myButtons[x]["text"] = "Nothing Scheduled"
         self.top.destroy()
 
     def submit(self):
