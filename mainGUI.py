@@ -104,6 +104,9 @@ class ScheduleDialog:
 
         self.event = None
 
+        # Delete button
+        self.d = None
+
         top = self.top = Toplevel(parent)
 
         # Create dialog to add event
@@ -130,12 +133,15 @@ class ScheduleDialog:
                 break
 
             b = Button(top, text="OK", command=lambda i=self.event: self.edit(self.event))
+            self.d = Button(top, text="Delete Event", command=lambda i=self.event: self.delete(self.event))
 
         Label(top, text="How long is the event").pack()
         self.howLongMenu = OptionMenu(top, self.timeChoice, *choices)
         self.howLongMenu.pack(padx=5)
 
         b.pack(pady=5)
+        if self.d is not None:
+            self.d.pack(pady=5)
 
     def edit(self, event):
         """ Update the selected event"""
@@ -151,6 +157,15 @@ class ScheduleDialog:
 
         self.event = Event(number_to_change, self.eventName.get(), self.button, currentDate)
         self.event.update()
+        self.top.destroy()
+
+    def delete(self, event):
+        """ Deletes an event"""
+        for x in currentDate.events:
+            if x.name == event.name:
+                currentDate.events.remove(x)
+        event.length = 0
+        event.update()
         self.top.destroy()
 
 
