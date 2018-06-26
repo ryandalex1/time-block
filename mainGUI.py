@@ -1,6 +1,7 @@
 from tkinter import *
 from random import *
 from tkcalendar import *
+from datetime import *
 
 root = Tk()
 dates = []
@@ -55,6 +56,8 @@ class Date:
         # Display date at top left
         date_string = str(self.date.month) + "/" + str(self.date.day)
         Label(self.frame, text=date_string, foreground="royal blue").grid(row=0, column=0, pady=2)
+
+        Button(self.frame, text='Choose Date', command=lambda f=self.frame: pick_date(f)).grid(row=0, column=1, pady=2)
 
         # Adds labels for each time slot
         while self.startH < self.endH:
@@ -148,6 +151,31 @@ class ScheduleDialog:
         self.top.destroy()
 
 
+def pick_date(frame):
+    """ Dialog that allows user to change the date displayed"""
+
+    def get_date():
+        """Loads picked date"""
+        for date in dates:
+            if date.date == cal.selection_get():
+                top.destroy()
+                date.load_date()
+                return
+
+        x = Date((cal.selection_get()), frame)
+        dates.append(x)
+        top.destroy()
+        x.load_date()
+
+    top = tk.Toplevel(root)
+    top.grab_set()
+
+    cal = Calendar(top, font="Arial 14", selectmode='day', selectforeground="blue", foreground="black")
+
+    cal.pack(fill="both", expand=True)
+    tk.Button(top, text="Ok", command=get_date).pack()
+
+
 def schedule_dialog_main(button):
     """Opens scheduling dialog"""
     d = ScheduleDialog(root, button)
@@ -159,30 +187,6 @@ def main():
     def add_scrollbar(Event):
         """Adds scrollbar for canvas"""
         canvas.configure(scrollregion=canvas.bbox("all"), width=200, height=356)
-
-    def pick_date():
-        """ Dialog that allows user to change the date displayed"""
-
-        def get_date():
-            """Loads picked date"""
-            for date in dates:
-                if date.date == cal.selection_get():
-                    top.destroy()
-                    date.load_date()
-                    return
-
-            x = Date((cal.selection_get()), frame)
-            dates.append(x)
-            top.destroy()
-            x.load_date()
-
-        top = tk.Toplevel(root)
-        top.grab_set()
-
-        cal = Calendar(top, font="Arial 14", selectmode='day', selectforeground="blue", foreground="black")
-
-        cal.pack(fill="both", expand=True)
-        tk.Button(top, text="Ok", command=get_date).pack()
 
     sizex = 225
     sizey = 356
@@ -203,7 +207,8 @@ def main():
     canvas.create_window((0, 0), window=frame, anchor='nw')
     frame.bind("<Configure>", add_scrollbar)
 
-    Button(frame, text='Choose Date', command=pick_date).grid(row=0, column=1, pady=2)
+    dates.append(Date(datetime.now(), frame))
+    dates[0].load_date()
 
     root.mainloop()
 
