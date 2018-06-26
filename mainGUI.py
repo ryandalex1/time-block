@@ -34,7 +34,7 @@ class Event:
         indexes = [i for i, y in enumerate(self.date.buttons) if y["text"] == self.name]
         for z in indexes:
             if z not in range(int(self.row)-1, int(self.row)-1 + self.length):
-                self.date.buttons[z]["text"] = "Changed"
+                self.date.buttons[z]["text"] = "Nothing Scheduled"
 
 
 class Date:
