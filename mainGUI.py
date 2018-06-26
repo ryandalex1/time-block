@@ -10,26 +10,28 @@ currentDate = None
 class Event:
     """ An event with a name and time the user has added to the calendar"""
 
-    def __init__(self, length, name, beginningButton, date):
+    def __init__(self, length, name, beginning_button, date):
         self.name = name
         self.length = length
-        self.startButton = beginningButton
+        self.startButton = beginning_button
         self.date = date
         self.positionInfo = self.startButton.grid_info()
         self.row = self.positionInfo["row"]
         self.date.events.append(self)
 
     def update(self):
+        """ Updates all buttons contained in the event with the correct text"""
         x = self.row
         x = int(x)
-        amountToChange = x + self.length
-        while x < amountToChange:
+        number_to_change = x + self.length
+        while x < number_to_change:
             self.date.buttons[x]["text"] = self.name
             x += 1
         indexes = [i for i, y in enumerate(self.date.buttons) if y["text"] == self.name]
         for z in indexes:
             if z not in range(int(self.row), int(self.row) + self.length):
                 self.date.buttons[z]["text"] = "Nothing Scheduled"
+        # TODO Event is moved up by 15 minutes
 
 
 class Date:
@@ -43,12 +45,14 @@ class Date:
         self.endH = 21
         self.frame = frame
 
-    def loadDate(self):
+    def load_date(self):
+        """ Loads the GUI for a specific day"""
         global currentDate
         currentDate = self
 
         times = []
 
+        # Adds labels for each time slot
         while self.startH < self.endH:
             times.append(str(self.startH) + ":00")
             times.append(str(self.startH) + ":15")
@@ -56,14 +60,18 @@ class Date:
             times.append(str(self.startH) + ":45")
             self.startH += 1
 
+        # Adds a button for each time slot
         for x in range(len(times)):
             Label(self.frame, text=times[x]).grid(row=x+1, column=0)
-            z = Button(self.frame, text="Nothing Scheduled", width=15, command=lambda i=x: dialogMain(self.buttons[i]))
+            z = Button(self.frame, text="Nothing Scheduled", width=15,
+                       command=lambda i=x: schedule_dialog_main(self.buttons[i]))
             z.grid(row=x+1, column=1)
             self.buttons.append(z)
 
+        # Displays all events already addsd
         for event in self.events:
             event.update()
+            # TODO Does not load correctly when going back to a day with events
 
 
 class ScheduleDialog:
@@ -78,6 +86,7 @@ class ScheduleDialog:
         self.colorChoices = ["royal blue", "medium sea green", "yellow", "salmon", "coral", "indian red",
                              "medium orchid", "DarkOliveGreen1", "turquoise1", "khaki", "aquamarine"]
         shuffle(self.colorChoices)
+        # TODO Find fix for OSX
 
         self.button = button
         self.positionInfo = self.button.grid_info()
@@ -87,6 +96,7 @@ class ScheduleDialog:
 
         top = self.top = Toplevel(parent)
 
+        # Create dialog to add event
         if self.button["text"] == "Nothing Scheduled":
             Label(top, text="Event Name").pack()
             self.eventName = Entry(top)
@@ -94,6 +104,7 @@ class ScheduleDialog:
             self.timeChoice.set("15 min")
             b = Button(top, text="OK", command=self.submit)
 
+        # Create dialog to update event
         else:
             Label(top, text="Edit Event").pack()
             self.eventName = Entry(top)
@@ -117,6 +128,7 @@ class ScheduleDialog:
         b.pack(pady=5)
 
     def edit(self, event):
+        """ Update the selected event"""
         event.length = (self.choiceValues.get(str(self.timeChoice.get())))
         event.name = self.eventName.get()
         event.update()
@@ -124,37 +136,41 @@ class ScheduleDialog:
         self.top.destroy()
 
     def submit(self):
-        numberToChange = (self.choiceValues.get(str(self.timeChoice.get())))
+        """ Create a new event as specified and update it"""
+        number_to_change = (self.choiceValues.get(str(self.timeChoice.get())))
 
-        self.event = Event(numberToChange, self.eventName.get(), self.button, currentDate)
+        self.event = Event(number_to_change, self.eventName.get(), self.button, currentDate)
         self.event.update()
         self.top.destroy()
 
 
-def dialogMain(button):
-    """Adds an event to a the time block"""
+def schedule_dialog_main(button):
+    """Opens scheduling dialog"""
     d = ScheduleDialog(root, button)
     root.wait_window(d.top)
 
 
 def main():
 
-    def addScrollbar(Event):
+    def add_scrollbar(Event):
         """Adds scrollbar for canvas"""
         canvas.configure(scrollregion=canvas.bbox("all"), width=200, height=356)
 
-    def pickDate():
-        def getDate():
+    def pick_date():
+        """ Dialog that allows user to change the date displayed"""
+
+        def get_date():
+            """Loads picked date"""
             for date in dates:
                 if date.date == cal.selection_get():
                     top.destroy()
-                    date.loadDate()
+                    date.load_date()
                     return
 
             x = Date((cal.selection_get()), frame)
             dates.append(x)
             top.destroy()
-            x.loadDate()
+            x.load_date()
 
         top = tk.Toplevel(root)
         top.grab_set()
@@ -162,7 +178,7 @@ def main():
         cal = Calendar(top, font="Arial 14", selectmode='day', selectforeground="blue", foreground="black")
 
         cal.pack(fill="both", expand=True)
-        tk.Button(top, text="Ok", command=getDate).pack()
+        tk.Button(top, text="Ok", command=get_date).pack()
 
     sizex = 225
     sizey = 356
@@ -173,16 +189,18 @@ def main():
     myframe = Frame(root, relief=GROOVE, width=50, height=100, bd=1)
     myframe.place(x=0, y=0)
 
+    # Add support for scrollbar
     canvas = Canvas(myframe)
     frame = Frame(canvas)
     myscrollbar = Scrollbar(myframe, orient="vertical", command=canvas.yview)
     canvas.configure(yscrollcommand=myscrollbar.set)
-
     myscrollbar.pack(side="right", fill="y")
     canvas.pack(side="left")
     canvas.create_window((0, 0), window=frame, anchor='nw')
-    frame.bind("<Configure>", addScrollbar)
-    Button(frame, text='Choose Date', command=pickDate).grid(row=0, column=1, pady=2)
+    frame.bind("<Configure>", add_scrollbar)
+
+    Button(frame, text='Choose Date', command=pick_date).grid(row=0, column=1, pady=2)
+
     root.mainloop()
 
 
