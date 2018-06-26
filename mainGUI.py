@@ -29,13 +29,12 @@ class Event:
         x = int(x)
         number_to_change = x + self.length
         while x < number_to_change:
-            self.date.buttons[x]["text"] = self.name
+            self.date.buttons[x-1]["text"] = self.name
             x += 1
         indexes = [i for i, y in enumerate(self.date.buttons) if y["text"] == self.name]
         for z in indexes:
-            if z not in range(int(self.row), int(self.row) + self.length):
-                self.date.buttons[z]["text"] = "Nothing Scheduled"
-        # TODO Event is moved up by 15 minutes
+            if z not in range(int(self.row)-1, int(self.row)-1 + self.length):
+                self.date.buttons[z]["text"] = "Changed"
 
 
 class Date:
