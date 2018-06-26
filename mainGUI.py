@@ -52,6 +52,10 @@ class Date:
 
         times = []
 
+        # Display date at top left
+        date_string = str(self.date.month) + "/" + str(self.date.day)
+        Label(self.frame, text=date_string, foreground="royal blue").grid(row=0, column=0, pady=2)
+
         # Adds labels for each time slot
         while self.startH < self.endH:
             times.append(str(self.startH) + ":00")
@@ -68,7 +72,7 @@ class Date:
             z.grid(row=x+1, column=1)
             self.buttons.append(z)
 
-        # Displays all events already addsd
+        # Displays all events already added
         for event in self.events:
             event.update()
             # TODO Does not load correctly when going back to a day with events
