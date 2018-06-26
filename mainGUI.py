@@ -4,7 +4,7 @@ from tkcalendar import *
 from datetime import *
 from os import path
 
-root = Tk()
+root = None
 start_hour = 0
 end_hour = 0
 dates = []
@@ -154,10 +154,10 @@ class ScheduleDialog:
         self.top.destroy()
 
 
-class SettingsDialog:
+class SettingsDialog(Frame):
     def __init__(self, parent):
+        Frame.__init__(self, parent)
         self.parent = parent
-        top = self.top = Toplevel(parent)
 
         self.startValues = {"5:00AM": 5, "6:00AM": 6, "7:00AM": 7, "8:00AM": 8, "9:00AM": 9, "10:00AM": 10}
         self.startChoice = StringVar(root)
@@ -167,26 +167,26 @@ class SettingsDialog:
         self.endChoice = StringVar(root)
         self.endChoice.set("7:00PM")
 
-        Label(top, text="Welcome to Time Blocker").pack()
+        Label(parent, text="Welcome to Time Blocker").pack()
 
-        Label(top, text="What time does your day start?").pack()
+        Label(parent, text="What time does your day start?").pack()
 
-        self.startTimeMenu = OptionMenu(top, self.startChoice, *self.startValues.keys())
+        self.startTimeMenu = OptionMenu(parent, self.startChoice, *self.startValues.keys())
         self.startTimeMenu.pack(padx=5)
 
-        Label(top, text="What time does your day end?").pack()
+        Label(parent, text="What time does your day end?").pack()
 
-        self.endTimeMenu = OptionMenu(top, self.endChoice, *self.endValues.keys())
+        self.endTimeMenu = OptionMenu(parent, self.endChoice, *self.endValues.keys())
         self.endTimeMenu.pack(padx=5)
 
-        Button(top, text="OK", command=self.set_settings).pack(pady=5)
+        Button(parent, text="OK", command=self.set_settings).pack(pady=5)
 
     def set_settings(self):
         file = open("settings.txt", "a")
         file.write(str(self.startValues[str(self.startChoice.get())]) + "\n")
         file.write(str(self.endValues[str(self.endChoice.get())]))
         file.close()
-        self.top.destroy()
+        self.parent.destroy()
 
 
 def pick_date(frame):
@@ -220,14 +220,15 @@ def schedule_dialog_main(button):
     root.wait_window(d.top)
 
 
-def get_user_settings():
+def settings_dialog_main():
     """ Gets users settings from settings.txt"""
     global start_hour
     global end_hour
 
     if not path.exists("settings.txt"):
-        d = SettingsDialog(root)
-        root.wait_window(d.top)
+        root = Tk()
+        SettingsDialog(root).pack(side="top", fill="both", expand=True)
+        root.mainloop()
 
     settings_file = open("settings.txt", "r")
     start_hour = int(settings_file.readline().rstrip())
@@ -239,6 +240,11 @@ def main():
     def add_scrollbar(Event):
         """Adds scrollbar for canvas"""
         canvas.configure(scrollregion=canvas.bbox("all"), width=200, height=356)
+
+    settings_dialog_main()
+
+    global root
+    root = Tk()
 
     sizex = 225
     sizey = 356
@@ -259,7 +265,6 @@ def main():
     canvas.create_window((0, 0), window=frame, anchor='nw')
     frame.bind("<Configure>", add_scrollbar)
 
-    get_user_settings()
     dates.append(Date(datetime.now(), frame))
     dates[0].load_date()
 
