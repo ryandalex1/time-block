@@ -77,10 +77,10 @@ class Date:
         # Adds labels for each time slot
         self.startHChange = self.startH
         while self.startHChange < self.endH:
-            times.append(str(self.startH) + ":00")
-            times.append(str(self.startH) + ":15")
-            times.append(str(self.startH) + ":30")
-            times.append(str(self.startH) + ":45")
+            times.append(str(self.startHChange) + ":00")
+            times.append(str(self.startHChange) + ":15")
+            times.append(str(self.startHChange) + ":30")
+            times.append(str(self.startHChange) + ":45")
             self.startHChange += 1
 
         # Adds a button for each time slot
@@ -241,7 +241,8 @@ def pick_date():
     top = tk.Toplevel(root)
     top.grab_set()
 
-    cal = Calendar(top, font="Arial 14", selectmode='day', selectforeground="blue", foreground="black")
+    cal = Calendar(top, font="Arial 14", selectmode='day', selectforeground="blue",
+                   foreground="black", weekendforeground="black")
 
     cal.pack(fill="both", expand=True)
     tk.Button(top, text="Ok", command=get_date).pack()
