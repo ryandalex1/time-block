@@ -304,7 +304,7 @@ def main():
     current = datetime.now()
     try:
         event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
-    except TypeError:
+    except:
         event_shelve[str(current.year) + str(current.month) + str(current.day)] = Date(datetime.now())
         event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
     event_shelve.close()
