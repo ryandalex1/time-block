@@ -3,8 +3,10 @@ from random import *
 from tkcalendar import *
 from datetime import *
 from os import path
+import shelve
 
 root = None
+frame = None
 start_hour = 0
 end_hour = 0
 dates = []
@@ -21,7 +23,17 @@ class Event:
         self.date = date
         self.positionInfo = self.startButton.grid_info()
         self.row = self.positionInfo["row"]
+        self.positionInfo = None
+        self.startButton = None
         self.date.events.append(self)
+
+        self.date.buttons = None
+        event_shelve = shelve.open("eventStorage.dat")
+        event_shelve[self.date.dString] = self.date
+        event_shelve[self.date.dString].load_date()
+        event_shelve.close()
+        self.date.load_date()
+        # self.startButton = None
 
     def update(self):
         """ Updates all buttons contained in the event with the correct text"""
@@ -40,39 +52,41 @@ class Event:
 class Date:
     """ Contains all events on a specific date"""
 
-    def __init__(self, date, frame):
+    def __init__(self, date):
         self.date = date
         self.events = []
-        self.buttons = []
         self.startH = start_hour
         self.endH = end_hour
-        self.frame = frame
+        self.dString = str(self.date.year) + str(self.date.month) + str(self.date.day)
+        self.startHChange = self.startH
 
     def load_date(self):
         """ Loads the GUI for a specific day"""
         global currentDate
         currentDate = self
 
+        self.buttons = []
         times = []
 
         # Display date at top left
         date_string = str(self.date.month) + "/" + str(self.date.day)
-        Label(self.frame, text=date_string, foreground="royal blue").grid(row=0, column=0, pady=2)
+        Label(frame, text=date_string, foreground="royal blue").grid(row=0, column=0, pady=2)
 
-        Button(self.frame, text='Choose Date', command=lambda f=self.frame: pick_date(f)).grid(row=0, column=1, pady=2)
+        Button(frame, text='Choose Date', command=pick_date).grid(row=0, column=1, pady=2)
 
         # Adds labels for each time slot
-        while self.startH < self.endH:
+        self.startHChange = self.startH
+        while self.startHChange < self.endH:
             times.append(str(self.startH) + ":00")
             times.append(str(self.startH) + ":15")
             times.append(str(self.startH) + ":30")
             times.append(str(self.startH) + ":45")
-            self.startH += 1
+            self.startHChange += 1
 
         # Adds a button for each time slot
         for x in range(len(times)):
-            Label(self.frame, text=times[x]).grid(row=x+1, column=0)
-            z = Button(self.frame, text="Nothing Scheduled", width=15,
+            Label(frame, text=times[x]).grid(row=x+1, column=0)
+            z = Button(frame, text="Nothing Scheduled", width=15,
                        command=lambda i=x: schedule_dialog_main(self.buttons[i]))
             z.grid(row=x+1, column=1)
             self.buttons.append(z)
@@ -80,7 +94,7 @@ class Date:
         # Displays all events already added
         for event in self.events:
             event.update()
-            # TODO Does not load correctly when going back to a day with events
+        # TODO Does not load correctly when going back to a day with events
 
 
 class ScheduleDialog:
@@ -203,21 +217,26 @@ class SettingsDialog(Frame):
         self.parent.destroy()
 
 
-def pick_date(frame):
+def pick_date():
     """ Dialog that allows user to change the date displayed"""
 
     def get_date():
         """Loads picked date"""
-        for date in dates:
-            if date.date == cal.selection_get():
+        date_shelve = shelve.open("eventStorage.dat")
+        for date_key in date_shelve:
+            selected = cal.selection_get()
+            new_value = date_shelve[date_key].date
+            if new_value.month == selected.month and new_value.day == selected.day and new_value.year == selected.year:
                 top.destroy()
-                date.load_date()
+                date_shelve[date_key].load_date()
+                date_shelve.close()
                 return
 
-        x = Date((cal.selection_get()), frame)
-        dates.append(x)
+        x = Date((cal.selection_get()))
+        date_shelve[str(x.date.year) + str(x.date.month) + str(x.date.day)] = x
         top.destroy()
         x.load_date()
+        date_shelve.close()
 
     top = tk.Toplevel(root)
     top.grab_set()
@@ -258,6 +277,8 @@ def main():
     settings_dialog_main()
 
     global root
+    global frame
+
     root = Tk()
 
     sizex = 225
@@ -279,8 +300,11 @@ def main():
     canvas.create_window((0, 0), window=frame, anchor='nw')
     frame.bind("<Configure>", add_scrollbar)
 
-    dates.append(Date(datetime.now(), frame))
-    dates[0].load_date()
+    event_shelve = shelve.open("eventStorage.dat")
+    current = datetime.now()
+    event_shelve[str(current.year) + str(current.month) + str(current.day)] = Date(datetime.now())
+    event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
+    event_shelve.close()
 
     root.mainloop()
 
