@@ -4,6 +4,10 @@ from tkcalendar import *
 from datetime import *
 from os import path
 import shelve
+from PIL import Image, ImageTk
+
+settingsWheelPIL = Image.open("images/settingsIcon.png")
+settingsWheelPNG = None
 
 root = None
 frame = None
@@ -65,14 +69,16 @@ class Date:
         global currentDate
         currentDate = self
 
+        self.startH = start_hour
+        self.endH = end_hour
+
         self.buttons = []
         times = []
 
         # Display date at top left
         date_string = str(self.date.month) + "/" + str(self.date.day)
-        Label(frame, text=date_string, foreground="royal blue").grid(row=0, column=0, pady=2)
-
-        Button(frame, text='Choose Date', command=pick_date).grid(row=0, column=1, pady=2)
+        Button(frame, text=date_string, foreground="royal blue", command=pick_date).grid(row=0, column=1)
+        Button(frame, image=settingsWheelPNG, command=settings_dialog_main).grid(row=0, column=0)
 
         # Adds labels for each time slot
         self.startHChange = self.startH
@@ -195,26 +201,27 @@ class SettingsDialog(Frame):
         self.endChoice = StringVar(root)
         self.endChoice.set("7:00PM")
 
-        Label(parent, text="Welcome to Time Blocker").pack()
+        top = self.top = Toplevel(parent)
 
-        Label(parent, text="What time does your day start?").pack()
+        Label(top, text="What time does your day start?").pack()
 
-        self.startTimeMenu = OptionMenu(parent, self.startChoice, *self.startValues.keys())
+        self.startTimeMenu = OptionMenu(top, self.startChoice, *self.startValues.keys())
         self.startTimeMenu.pack(padx=5)
 
-        Label(parent, text="What time does your day end?").pack()
+        Label(top, text="What time does your day end?").pack()
 
-        self.endTimeMenu = OptionMenu(parent, self.endChoice, *self.endValues.keys())
+        self.endTimeMenu = OptionMenu(top, self.endChoice, *self.endValues.keys())
         self.endTimeMenu.pack(padx=5)
 
-        Button(parent, text="OK", command=self.set_settings).pack(pady=5)
+        Button(top, text="Save", command=self.set_settings).pack(pady=5)
 
     def set_settings(self):
+        open('settings.txt', 'w').close()
         file = open("settings.txt", "a")
         file.write(str(self.startValues[str(self.startChoice.get())]) + "\n")
         file.write(str(self.endValues[str(self.endChoice.get())]))
         file.close()
-        self.parent.destroy()
+        self.top.destroy()
 
 
 def pick_date():
@@ -255,6 +262,14 @@ def schedule_dialog_main(button):
 
 
 def settings_dialog_main():
+    """Opens settings dialog"""
+    d = SettingsDialog(root)
+    root.wait_window(d.top)
+    check_for_settings()
+    currentDate.load_date()
+
+
+def check_for_settings():
     """ Gets users settings from settings.txt"""
     global start_hour
     global end_hour
@@ -275,12 +290,16 @@ def main():
         """Adds scrollbar for canvas"""
         canvas.configure(scrollregion=canvas.bbox("all"), width=200, height=356)
 
-    settings_dialog_main()
+    check_for_settings()
 
     global root
     global frame
+    global settingsWheelPNG
 
     root = Tk()
+
+    # photo = ImageTk.PhotoImage(img).convert('RGB')
+    settingsWheelPNG = ImageTk.PhotoImage(settingsWheelPIL)
 
     sizex = 225
     sizey = 356
@@ -288,7 +307,7 @@ def main():
     root.title("Time Blocker")
     root.resizable(width=False, height=False)
 
-    myframe = Frame(root, relief=GROOVE, width=50, height=100, bd=1)
+    myframe = Frame(root, relief=GROOVE, width=65, height=100, bd=1)
     myframe.place(x=0, y=0)
 
     # Add support for scrollbar
@@ -315,3 +334,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# settingsIcon by https://www.flaticon.com/authors/tutsplus
+# from https://www.flaticon.com/
+# licensed by http://creativecommons.org/licenses/by/3.0/
