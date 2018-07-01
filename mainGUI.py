@@ -302,8 +302,11 @@ def main():
 
     event_shelve = shelve.open("eventStorage.dat")
     current = datetime.now()
-    event_shelve[str(current.year) + str(current.month) + str(current.day)] = Date(datetime.now())
-    event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
+    try:
+        event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
+    except TypeError:
+        event_shelve[str(current.year) + str(current.month) + str(current.day)] = Date(datetime.now())
+        event_shelve[str(current.year) + str(current.month) + str(current.day)].load_date()
     event_shelve.close()
 
     root.mainloop()
