@@ -1,5 +1,4 @@
 from tkinter import *
-from random import *
 from tkcalendar import *
 from datetime import *
 from os import path
@@ -31,14 +30,6 @@ class Event:
         self.startButton = None
         self.date.events.append(self)
 
-        self.date.buttons = None
-        event_shelve = shelve.open("eventStorage.dat")
-        event_shelve[self.date.dString] = self.date
-        event_shelve[self.date.dString].load_date()
-        event_shelve.close()
-        self.date.load_date()
-        # self.startButton = None
-
     def update(self):
         """ Updates all buttons contained in the event with the correct text"""
         x = self.row
@@ -51,6 +42,14 @@ class Event:
         for z in indexes:
             if z not in range(int(self.row)-1, int(self.row)-1 + self.length):
                 self.date.buttons[z]["text"] = "Nothing Scheduled"
+
+    def update_shelve(self):
+        self.date.buttons = None
+        event_shelve = shelve.open("eventStorage.dat")
+        event_shelve[self.date.dString] = self.date
+        event_shelve[self.date.dString].load_date()
+        event_shelve.close()
+        self.date.load_date()
 
 
 class Date:
@@ -100,7 +99,6 @@ class Date:
         # Displays all events already added
         for event in self.events:
             event.update()
-        # TODO Does not load correctly when going back to a day with events
 
 
 class ScheduleDialog:
@@ -111,11 +109,6 @@ class ScheduleDialog:
         choices = ["15 min", "30 min", "45 min", "1 hour", "2 hours", "3 hours"]
         self.choiceValues = {"15 min": 1, "30 min": 2, "45 min": 3, "1 hour": 4, "2 hours": 8, "3 hours": 12}
         self.timeChoice = StringVar(root)
-
-        self.colorChoices = ["royal blue", "medium sea green", "yellow", "salmon", "coral", "indian red",
-                             "medium orchid", "DarkOliveGreen1", "turquoise1", "khaki", "aquamarine"]
-        shuffle(self.colorChoices)
-        # TODO Find fix for OSX
 
         self.button = button
         self.positionInfo = self.button.grid_info()
@@ -167,6 +160,7 @@ class ScheduleDialog:
         event.length = (self.choiceValues.get(str(self.timeChoice.get())))
         event.name = self.eventName.get()
         event.update()
+        event.update_shelve()
 
         self.top.destroy()
 
@@ -176,6 +170,7 @@ class ScheduleDialog:
 
         self.event = Event(number_to_change, self.eventName.get(), self.button, currentDate)
         self.event.update()
+        self.event.update_shelve()
         self.top.destroy()
 
     def delete(self, event):
@@ -185,6 +180,7 @@ class ScheduleDialog:
                 currentDate.events.remove(x)
         event.length = 0
         event.update()
+        self.event.update_shelve()
         self.top.destroy()
 
 
