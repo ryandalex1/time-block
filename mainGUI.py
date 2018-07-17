@@ -26,6 +26,7 @@ class Event:
         self.date = date
         self.positionInfo = self.startButton.grid_info()
         self.row = self.positionInfo["row"]
+        # TODO Cast to int immediately
         self.positionInfo = None
         self.startButton = None
         self.date.events.append(self)
@@ -100,6 +101,14 @@ class Date:
         for event in self.events:
             event.update()
 
+    def update_shelve(self):
+        self.buttons = None
+        event_shelve = shelve.open("eventStorage.dat")
+        event_shelve[self.dString] = self
+        event_shelve[self.dString].load_date()
+        event_shelve.close()
+        self.load_date()
+
 
 class ScheduleDialog:
     """The dialog window to add an event in a time block"""
@@ -160,7 +169,7 @@ class ScheduleDialog:
         event.length = (self.choiceValues.get(str(self.timeChoice.get())))
         event.name = self.eventName.get()
         event.update()
-        event.update_shelve()
+        currentDate.update_shelve()
 
         self.top.destroy()
 
@@ -170,7 +179,7 @@ class ScheduleDialog:
 
         self.event = Event(number_to_change, self.eventName.get(), self.button, currentDate)
         self.event.update()
-        self.event.update_shelve()
+        currentDate.update_shelve()
         self.top.destroy()
 
     def delete(self, event):
@@ -180,11 +189,11 @@ class ScheduleDialog:
                 currentDate.events.remove(x)
         event.length = 0
         event.update()
-        self.event.update_shelve()
+        currentDate.update_shelve()
         self.top.destroy()
 
 
-class SettingsDialog(Frame):
+class ApplicationSettingsDialog(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.parent = parent
@@ -218,6 +227,51 @@ class SettingsDialog(Frame):
         file.write(str(self.endValues[str(self.endChoice.get())]))
         file.close()
         self.top.destroy()
+
+
+class DailySettingsDialog(Frame):
+    def __init__(self, parent):
+        Frame.__init__(self, parent)
+        self.parent = parent
+
+        top = self.top = Toplevel(parent)
+
+        Button(top, text="Clear Today's Schedule", command=self.clear_schedule).pack(pady=5)
+        Button(top, text="Push Schedule Back 30 Minutes", command=self.push_back).pack()
+        Button(top, text="Push Schedule Up 30 Minutes", command=self.push_up).pack()
+        Button(top, text="Global Settings", command=self.global_settings).pack(pady=5)
+
+    @staticmethod
+    def clear_schedule():
+        """Clears all events from the current day"""
+        currentDate.events = []
+        currentDate.update_shelve()
+
+    @staticmethod
+    def push_back():
+        """Pushes all events in the current day back 30 minutes"""
+        for event in currentDate.events:
+            x = int(event.row)
+            x += 2
+            event.row = x
+        currentDate.load_date()
+        currentDate.update_shelve()
+
+    @staticmethod
+    def push_up():
+        """Pushes all events in the current day up 30 minutes"""
+        for event in currentDate.events:
+            x = int(event.row)
+            x -= 2
+            event.row = x
+        currentDate.load_date()
+        currentDate.update_shelve()
+
+    def global_settings(self):
+        """Opens global settings dialog"""
+        d = ApplicationSettingsDialog(self)
+        self.wait_window(d.top)
+        check_for_settings()
 
 
 def pick_date():
@@ -259,7 +313,7 @@ def schedule_dialog_main(button):
 
 def settings_dialog_main():
     """Opens settings dialog"""
-    d = SettingsDialog(root)
+    d = DailySettingsDialog(root)
     root.wait_window(d.top)
     check_for_settings()
     currentDate.load_date()
@@ -272,7 +326,7 @@ def check_for_settings():
 
     if not path.exists("settings.txt"):
         root = Tk()
-        SettingsDialog(root).pack(side="top", fill="both", expand=True)
+        ApplicationSettingsDialog(root).pack(side="top", fill="both", expand=True)
         root.mainloop()
 
     settings_file = open("settings.txt", "r")
@@ -326,7 +380,7 @@ def main():
     event_shelve.close()
 
     root.mainloop()
-
+# TODO Only update DB when app closes
 
 if __name__ == "__main__":
     main()
